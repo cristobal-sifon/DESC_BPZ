@@ -21,6 +21,8 @@ def get_str(file,cols=0,nrows='all'):
              x,y,z=get_str('myfile.cat',(0,1,2))
         x,y,z are returned as string lists
     """
+    if isinstance(cols, str):
+        cols = int(cols)
     if type(cols)==type(0):
         cols=(cols,)
         nvar=1

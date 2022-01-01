@@ -82,6 +82,8 @@ def get_str(file,cols=0,nrows='all'):
 	     x,y,z=get_str('myfile.cat',(0,1,2))
         x,y,z are returned as string lists
     """
+    if isinstance(cols, str):
+        cols = int(cols)
     if type(cols)==type(0):
         cols=(cols,)
         nvar=1
@@ -96,7 +98,8 @@ def get_str(file,cols=0,nrows='all'):
         if lines[0]=='#': continue
         pieces=lines.split()
         if len(pieces)==0: continue
-        for j in range(nvar):lista[j].append(pieces[cols[j]])
+        for j in range(nvar):
+            lista[j].append(pieces[cols[j]])
         counter=counter+1
     if nvar==1: return lista[0]
     else: return tuple(lista) 
@@ -124,6 +127,8 @@ def get_data(file,cols=0,nrows='all'):
     """ Returns data in the columns defined by the tuple
     (or single integer) cols as a tuple of float arrays 
     (or a single float array)"""
+    if isinstance(cols, str):
+        cols = int(cols)
     if type(cols)==type(0):
         cols=(cols,)
         nvar=1
@@ -220,13 +225,16 @@ def get_2Darray(file,cols='all',nrows='all',verbose='no'):
             if verbose=='yes': print('cols=',cols)
             break
     else:
+        if isinstance(cols, str):
+            cols = int(cols)
+        if isinstance(cols, int):
+            cols = (cols,)
         nc=len(cols)
-    
     lista=get_data(file,cols,nrows)
-    nl=len(lista[0])
+    nl=len(lista) if not hasattr(lista[0], '__iter__') else len(lista[0])
     x=zeros((nl,nc),float)
     for i in range(nc):x[:,i]=lista[i]
-    return x
+    return squeeze(x)
 
 def put_2Darray(file,array,header='',format='',append='no'):
     """ Writes a 2D array to a file, where the first 
@@ -301,10 +309,26 @@ def params_commandline(lista):
         dict['KEY2']=value 
 	etc.
     """
+    dict = {}
+    if isinstance(lista, str):
+        lista = lista.split()
+    for i, key in enumerate(lista):
+        # skip non optional arguments
+        if key[0] != '-':
+            continue
+        key = key[1:]
+        # replace commas
+        val = lista[i+1]
+        if val[0] == '-':
+            err = f'value {val} invalid for option {key}'
+            raise ValueError(err)
+        if ',' in val:
+            val = val.split(',')
+        dict[key] = val
+    return dict
     if len(lista)%2!=0:
         print('Error: The number of parameter names and values does not match')
         sys.exit()
-    dict={}
     for i in range(0,len(lista),2):
         key=lista[i]
         if type(key)!=type(''):

@@ -1,13 +1,28 @@
+import re
 from setuptools import setup, find_namespace_packages
+
+
+name = 'desc_bpz'
+
+
+def read_value(value, file=f'{name}/__init__.py'):
+    version_file = open(file).read()
+    version_match = re.search(
+        rf"^{value} = ['\"]([^'\"]*)['\"]", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 packages = find_namespace_packages()
 setup(
-    name="desc_bpz",
-    version="0.0.1",
-    author="Noel Benitez, Dan Coe, Will Hartley,"
+    name=name,
+    version=read_value('__version__'),
+    author="Narciso Benitez, Dan Coe, Will Hartley,"
         "Sam Schmidt, LSST DESC PZWG",
     author_email="fake@fake.edu",
     packages=packages,
+    scripts=['scripts/bpz.py'],
     package_data={
         "": ["*.h5", "*.yaml", "*.sed", "*.res",
              "*.AB", "*.columns", "*.pars"],
@@ -34,6 +49,7 @@ setup(
                       'scipy',
                       'pandas>=1.1',
                       'h5py',
+                      'tables',
                       ],
     python_requires='>=3.5',
     setup_requires=['pytest-runner'],

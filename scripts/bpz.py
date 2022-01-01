@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
    bpz: Bayesian Photo-Z estimation
    Reference: Benitez 2000, ApJ, 536, p.571
@@ -39,6 +40,7 @@ from desc_bpz.will_tools_py3 import *
 from desc_bpz.paths import get_fil_file, get_sed_file, get_ab_file
 from desc_bpz.paths import set_fil_dir, set_sed_dir, set_ab_dir
 from desc_bpz.coetools_py3 import pause, params_cl
+import tables
 
 
 def seglist(vals, mask=None):
@@ -98,8 +100,8 @@ pars.d={
     'MADAU':'yes',          #Apply Madau correction to spectra
     'Z_THR':0,              #Integrate probability for z>z_thr
     'COLOR':'no',           #Use colors instead of fluxes
-    'PLOTS':'no',           #Don't produce plots 
-    'INTERACTIVE':'yes',     #Don't query the user
+    'PLOTS':'yes',           #Don't produce plots 
+    'INTERACTIVE':'no',     #Don't query the user
     'PHOTO_ERRORS':'no',    #Define the confidence interval using only the photometric errors
     'MIN_RMS':0.05,         #"Intrinsic"  photo-z rms in dz /(1+z) (Change to 0.05 for templates from Benitez et al. 2004
     'N_PEAKS':1,
@@ -118,16 +120,28 @@ pars.d={
     "ADD_CONTINUOUS_PROB":None,
     "NMAX": None, # Useful for testing
     "WRITE_FLUX_COMP": 'no', #flag to write flux_comparison file use 'no' rather than False in keepint with BPZ formatting
+    "INPUT_FORMAT": 'ascii', # ascii or hdf5
+    "OUTPUT_FORMAT": 'hdf5',
     "H5_CHUNK_SIZE": 10000, #how big of hdf5 chunks to create at a time
     "OUTPUT_CUT": "Null"
-}               
+}
+
+pars.fromcommandline(sys.argv)
 
 
-if pars.d['PLOTS']=='no': plots=0
+#if pars.d['PLOTS']=='no': plots=0
+plots = not pars.d['PLOTS'] == 'no'
 if pars.d['WRITE_FLUX_COMP'] == 'no': write_flux_comp = False
 
+# catalog format
+if pars.d['INPUT_FORMAT'] == 'ascii':
+    read_2Darray = get_2Darray
+elif pars.d['INPUT_FORMAT'] == 'hdf5':
+    read_2Darray = get_2Darray_hdf5
+else:
+    raise ValueError('CATALOG_FORMAT must be either "ascii" or "hdf5"')
 
-
+"""
 if plots:
     # If pylab installed show plots
     plots='pylab'
@@ -140,12 +154,13 @@ if plots:
         title('KILL THIS WINDOW!')
         show()
         ioff()
-    except:
+    except IndexError:
         try:
             from biggles import *
             plots='biggles'
-        except:
+        except IndexError:
             plots=0
+"""
 
 #Define the default values of the parameters 
 pars.d['INPUT']=sys.argv[1]       # catalog with the photometry
@@ -439,11 +454,11 @@ for filter in filters:
 ####WILL'S WAY DOESN"T OFFSET INDECES
 #    flux_cols.append(datos[0])
 #    eflux_cols.append(datos[1])
-    flux_cols.append(datos[0])
-    eflux_cols.append(datos[1])
+    flux_cols.append(int(datos[0]))
+    eflux_cols.append(int(datos[1]))
     cals.append(datos[2])
-    zp_errors.append(datos[3])
-    zp_offsets.append(datos[4])
+    zp_errors.append(float(datos[3]))
+    zp_offsets.append(float(datos[4]))
 zp_offsets=array(list(map(float,zp_offsets)))
 if pars.d['ZP_OFFSETS']:
     zp_offsets+=array(list(map(float,pars.d['ZP_OFFSETS'])))
@@ -457,15 +472,8 @@ eflux_cols=tuple(eflux_cols)
 ##f_obs=get_2Darray_fromfits(obs_file,flux_cols)
 ##ef_obs=get_2Darray_fromfits(obs_file,eflux_cols)
 
-f_obs=get_2Darray_hdf5(obs_file,flux_cols)
-ef_obs=get_2Darray_hdf5(obs_file,eflux_cols)
-#REMOVE THESE and replace with hdf5-SJS March 6, 2019
-#f_obs=get_2Darray(obs_file,flux_cols)
-#ef_obs=get_2Darray(obs_file,eflux_cols)
-####
-#print(ef_obs[0])
-#f_obs=get_2Darray(obs_file,flux_cols)
-#ef_obs=get_2Darray(obs_file,eflux_cols)
+f_obs=read_2Darray(obs_file,flux_cols)
+ef_obs=read_2Darray(obs_file,eflux_cols)
 
 # convert to 'AB' fluxes - how can this possibly be necessary!? Looks like it is. WHY?
 # Nope, things are still mostly bull! dmag are waaay off, or is that flux? that would be unhelpful....
@@ -590,16 +598,16 @@ if 'M_0' in col_pars.d:
     print ("m0column name:  %s"%(m_0_col))
     #take out old way, put in hdf5 way    
     #m_0_col=int(col_pars.d['M_0'])-1
-    #m_0=get_data(obs_file,m_0_col)
-    m_0=get_2Darray_hdf5(obs_file,m_0_col)
-    print(col_pars.d['M_0'])
+    m_0=get_data(obs_file,m_0_col)
+    #m_0 = read_2Darray(obs_file, m_0_col)
+    #m_0=get_2Darray_hdf5(obs_file,m_0_col)
+
 ###WILL'S m_0!
 ###    m_0=get_2Darray_fromfits(obs_file,tuple([col_pars.d['M_0'],]))
     #print(m_0[0])
 ###WILL'S ADDITION OF FLUX_ZP!!  TAKE OUT FOR NOW
 ###    if pars.d['MAG']=='no':
 ###        m_0 = pars.d['FLUX_ZP']-2.5*log10(m_0)
-    print((m_0[0]))
     m_0+=pars.d['DELTA_M_0'] # this only makes sense if m_0 is in mag - so assume this and convert.
 
 #Get the objects ID (as a string)
@@ -608,8 +616,10 @@ if 'ID' in col_pars.d:
     id_col=col_pars.d['ID']
     #TAKE out old way, put in hdf5 Mar 6 2019 SJS
     #id_col=int(col_pars.d['ID'])-1
-    #id=get_str(obs_file,id_col)
-    id = get_2Darray_hdf5(obs_file,id_col)
+    id=get_str(obs_file,id_col)
+    #id = read_2Darray(obs_file,id_col)
+    id = get_data(obs_file, id_col)
+    #id = get_2Darray_hdf5(obs_file,id_col)
 ####WILL'S METHOD FROM FITS!
 ####    id=get_long_fromfits(obs_file,col=col_pars.d['ID'])
     #id=get_str_fromfits(obs_file,id_col)
@@ -621,8 +631,9 @@ if 'Z_S' in col_pars.d:
     z_s_col=col_pars.d['Z_S']
     #TAKE out old way, switch to HDF5
     #z_s_col=int(col_pars.d['Z_S'])-1
-    #z_s=get_data(obs_file,z_s_col)
-    z_s=get_2Darray_hdf5(obs_file,z_s_col)
+    z_s=get_data(obs_file,z_s_col)
+    #z_s=read_2Darray(obs_file,z_s_col)
+    #z_s=get_2Darray_hdf5(obs_file,z_s_col)
 
 ###WILL'S METHOD WITH FITS
 ###    z_s=get_2Darray_fromfits(obs_file,tuple([col_pars.d['Z_S'],]))
@@ -648,7 +659,7 @@ check=pars.d['CHECK']
 
 checkSED = check!='no'
 
-if pars.d['OUTPUT_CUT'] is not "Null":
+if pars.d['OUTPUT_CUT'] != "Null":
     output_cut = float(pars.d['OUTPUT_CUT'])
     cutmask = (m_0 < output_cut)
     f_obs = f_obs[cutmask]
@@ -676,12 +687,13 @@ if checkSED:
 #Visualize the colors of the galaxies and the templates 
 
 #When there are spectroscopic redshifts available
-if interactive and 'Z_S' in col_pars.d and plots and checkSED and ask('Plot colors vs spectroscopic redshifts?'):
+if interactive and 'Z_S' in col_pars.d and plots and checkSED \
+        and ask('Plot colors vs spectroscopic redshifts?'):
     color_m=zeros((nz,nt,nf-1))*1.
     if plots == 'pylab':
         figure(1)
     nrows=2
-    ncols=(nf-1)/nrows
+    ncols=(nf-1)//nrows
     if (nf-1)%nrows: ncols+=1
     for i in range(nf-1):
 	##plot=FramedPlot()
@@ -723,7 +735,7 @@ if interactive and 'Z_S' in col_pars.d and plots and checkSED and ask('Plot colo
             plot.show()
     if plots == 'pylab':
         show()
-        inp = input('Hit Enter to continue.')
+        #inp = input('Hit Enter to continue.')
 
 #Get other information which will go in the output file (as strings)
 if 'OTHER' in col_pars.d:
@@ -757,12 +769,16 @@ else: get_z=1
 
 #Prepare the output file
 out_name=pars.d['OUTPUT']
+outfmt = pars.d['OUTPUT_FORMAT']
+assert outfmt in ('ascii', 'hdf5')
 if get_z:
     if os.path.exists(out_name):
         os.system('cp %s %s.bak' % (out_name,out_name))
         print("File %s exists. Copying it to %s.bak" % (out_name,out_name))
-    #output=open(out_name,'w')
-    output = h5py.File(out_name,"w")
+    if outfmt == 'ascii':
+        output=open(out_name,'w')
+    elif outfmt == 'hdf5':
+        output = h5py.File(out_name,"w")
 if pars.d['PROBS_LITE']=='no': save_probs=0
 else: save_probs=1
 
@@ -776,10 +792,12 @@ else: save_probs2=1
 
 #   File name and the date...
 time_stamp=time.ctime(time.time())
-#if get_z: output.write('## File '+out_name+'  '+time_stamp+'\n')
+if outfmt == 'ascii' and get_z:
+    output.write('## File '+out_name+'  '+time_stamp+'\n')
 timestamp = str(time.asctime())
-#if get_z: timeoutput = output.create_dataset("PARAMS/time",(1,),maxshape=(1,),dtype=dt,data = timestamp)
-if get_z: output.attrs["TIMESTAMP"] = timestamp
+if outfmt == 'hdf5':
+    #if get_z: timeoutput = output.create_dataset("PARAMS/time",(1,),maxshape=(1,),dtype=dt,data = timestamp)
+    if get_z: output.attrs["TIMESTAMP"] = timestamp
 
 #and also the parameters used to run bpz...
 #if get_z:output.write("""##
@@ -793,11 +811,13 @@ for key in claves:
         cosa=str.join(',',(list(pars.d[key])))
     else:
         cosa=str(pars.d[key])
-    #if get_z: output.write('##'+key.upper()+'='+cosa+'\n')
-    tmpnamex = "%s"%key.upper()
-    #dt = h5py.special_dtype(vlen=str)
-    #if get_z: output.create_dataset(tmpnamex,(1,),maxshape=(1,),dtype=dt,data=str(cosa))
-    if get_z: output.attrs[tmpnamex] = str(cosa)
+    if get_z:
+        if outfmt == 'ascii':
+            output.write('##'+key.upper()+'='+cosa+'\n')
+        tmpnamex = "%s"%key.upper()
+        #dt = h5py.special_dtype(vlen=str)
+        #output.create_dataset(tmpnamex,(1,),maxshape=(1,),dtype=dt,data=str(cosa))
+        output.attrs[tmpnamex] = str(cosa)
 
 if save_full_probs:
     #Shelve some info on the run
@@ -806,25 +826,31 @@ if save_full_probs:
     full_probs['PARS']=pars.d
 
 if save_probs:
-    #probs=open(pars.d['PROBS_LITE'],'w')
-    #SWITCH to HDF5 WRITE OUT!
-    probs = h5py.File(pars.d['PROBS_LITE'],"w")
-    #probs.write('# ID  p_bayes(z)  where z=arange(%.4f,%.4f,%.4f) \n' % (zmin,zmax+dz,dz))
-    #save the zgrid!
-    zgridwrite = probs.create_dataset("ZGRID",(len(z),),maxshape = (None,),dtype = 'f', data = z)
-    if ng<chunksize:
-        probswrite = probs.create_dataset("PDF", (ng,len(z)),dtype='f')
-        idwrite = probs.create_dataset("ID",(ng,),dtype='i8')
+    if outfmt == 'ascii':
+        probs=open(pars.d['PROBS_LITE'],'w')
+        #probs.write('# ID  p_bayes(z)  where z=arange(%.4f,%.4f,%.4f) \n' % (zmin,zmax+dz,dz))
+        print(f'# ID  p_bayes(z)  where z=arange({zmin:.4f},{zmax+dz:.4f},{dz:.4f}',
+              file=probs)
     else:
-        probswrite = probs.create_dataset("PDF", (chunksize,len(z)),maxshape = (None,len(z)),dtype='f')
-        idwrite = probs.create_dataset("ID",(chunksize,),maxshape=(None,),dtype='i8')
+        probs = h5py.File(pars.d['PROBS_LITE'],"w")
+        #save the zgrid!
+        zgridwrite = probs.create_dataset("ZGRID",(len(z),),maxshape = (None,),dtype = 'f', data = z)
+        if ng<chunksize:
+            probswrite = probs.create_dataset("PDF", (ng,len(z)),dtype='f')
+            idwrite = probs.create_dataset("ID",(ng,),dtype='i8')
+        else:
+            probswrite = probs.create_dataset("PDF", (chunksize,len(z)),maxshape = (None,len(z)),dtype='f')
+            idwrite = probs.create_dataset("ID",(chunksize,),maxshape=(None,),dtype='i8')
         
 if save_probs2:
-    #probs2=open(pars.d['PROBS2'],'w')
-    probs2=open('probs2.txt','w')
-    probs2.write('# id t  z1    P(z1) P(z1+dz) P(z1+2*dz) ...  where dz = %.4f\n' % dz)
-    #probs2.write('# ID\n')
-    #probs2.write('# t  z1  P(z1)  P(z1+dz)  P(z1+2*dz) ...  where dz = %.4f\n' % dz)
+    if outfmt == 'ascii':
+        probs2=open(pars.d['PROBS2'],'w')
+        #probs2=open('probs2.txt','w')
+        #probs2.write('# id t  z1    P(z1) P(z1+dz) P(z1+2*dz) ...  where dz = %.4f\n' % dz)
+        print(f'# id t  z1    P(z1) P(z1+dz) P(z1+2*dz) ...  where dz = {dz:.4f}',
+              file=probs2)
+        #probs2.write('# ID\n')
+        #probs2.write('# t  z1  P(z1)  P(z1+dz)  P(z1+2*dz) ...  where dz = %.4f\n' % dz)
 
 #Use a empirical prior?
 tipo_prior=pars.d['PRIOR']
@@ -1395,7 +1421,7 @@ for ig in range(ng):
         #texto='%s ' % str(id[ig])
         #texto+= len(p_bayes)*'%.3e '+'\n'
         #probs.write(texto % tuple(p_bayes))
-        idwrite[ig] = np.int(id[ig])
+        idwrite[ig] = int(id[ig])
         probswrite[ig] = p_bayes
         
         #if ig<ng-1: 
@@ -1517,6 +1543,9 @@ if checkSED:
     if save_probs2: probs2.close()
     
 
+if plots and checkSED:
+    print("\nI'm sorry, checkSED plots cannot be made just yet")
+    checkSED = False
 if plots and checkSED:
     zb,zm,zb1,zb2,o,tb=get_data(out_name,(1,6,2,3,5,4))
     #Plot the comparison between z_spec and z_B
