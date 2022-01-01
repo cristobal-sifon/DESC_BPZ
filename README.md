@@ -4,7 +4,7 @@ Original Bayesian Photometric Redshifts (BPZ) by Narciso Benítez and Dan Coe,
 updated as described below by the LSST-DESC PZ Working Group. This version 
 incorporates minor improvements mainly on the user interface.
 
-To install first create a ``conda`` environment called ``bpz`` and activate it:
+**To install** first create a ``conda`` environment called ``bpz`` and activate it:
 ```python
 conda create -n bpz python
 conda activate bpz
@@ -15,8 +15,12 @@ sh bpz-env.sh
 ```
 
 If you do not want to use a ``conda`` environment then follow the steps listed in 
-the original README below.
+the original ``README`` below.
 
+**To run** simply write
+```bash
+bpz.py CATALOG_NAME [-PARAMETER1 VALUE1 ...] [-P PARAMETER_FILE]
+```
 
 Original README
 ---------------
