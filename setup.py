@@ -50,6 +50,7 @@ setup(
                       'pandas>=1.1',
                       'h5py',
                       'tables',
+                      'icecream',
                       ],
     python_requires='>=3.5',
     setup_requires=['pytest-runner'],

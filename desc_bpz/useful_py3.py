@@ -17,6 +17,7 @@ import random
 #try: import ephem
 #except: pass
 import pandas as pd
+from icecream import ic
 
 
 #If biggles installed allow the plot options in the tests
