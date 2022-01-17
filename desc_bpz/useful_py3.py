@@ -22,7 +22,7 @@ from icecream import ic
 
 #If biggles installed allow the plot options in the tests
 plots=1
-try: 
+try:
     from biggles import *
 except: plots=0
 
@@ -32,16 +32,16 @@ def ejecuta(command=None,verbose=1):
     import os
     if verbose: print(command)
     os.system(command)
-    
+
 
 def ask(what="?"):
     """
     Usage:
     ans=ask(pregunta)
-    This function prints the string what, 
-    (usually a question) and asks for input 
-    from the user. It returns the value 0 if the 
-    answer starts by 'n' and 1 otherwise, even 
+    This function prints the string what,
+    (usually a question) and asks for input
+    from the user. It returns the value 0 if the
+    answer starts by 'n' and 1 otherwise, even
     if the input is just hitting 'enter'
     """
     if what[-1]!='\n': what=what+'\n'
@@ -51,13 +51,13 @@ def ask(what="?"):
     except:
         pass
     return 1
-    
+
 #Input/Output subroutines
 
 #Read/write headers
 
 def get_header(file):
-    """ Returns a string containing all the lines 
+    """ Returns a string containing all the lines
     at the top of a file which start by '#'"""
     buffer=''
     for line in open(file).readlines():
@@ -77,9 +77,9 @@ def put_header(file,text,comment=1):
 #Files containing strings
 
 def get_str(file,cols=0,nrows='all'):
-    """ 
+    """
         Reads strings from a file
-        Usage: 
+        Usage:
 	     x,y,z=get_str('myfile.cat',(0,1,2))
         x,y,z are returned as string lists
     """
@@ -91,7 +91,7 @@ def get_str(file,cols=0,nrows='all'):
     else: nvar=len(cols)
     lista=[]
     for i in range(nvar): lista.append([])
-    buffer=open(file).readlines() 
+    buffer=open(file).readlines()
     if nrows=='all': nrows=len(buffer)
     counter=0
     for lines in buffer:
@@ -103,16 +103,16 @@ def get_str(file,cols=0,nrows='all'):
             lista[j].append(pieces[cols[j]])
         counter=counter+1
     if nvar==1: return lista[0]
-    else: return tuple(lista) 
+    else: return tuple(lista)
 
 def put_str(file,tupla):
     """ Writes tuple of string lists to a file
         Usage:
 	  put_str(file,(x,y,z))
-    """    
+    """
     if type(tupla)!=type((2,)):
         raise 'Need a tuple of variables'
-    f=open(file,'w')    
+    f=open(file,'w')
     for i in range(1,len(tupla)):
         if len(tupla[i])!=len(tupla[0]):
             raise 'Variable lists have different lenght'
@@ -126,7 +126,7 @@ def put_str(file,tupla):
 
 def get_data(file,cols=0,nrows='all'):
     """ Returns data in the columns defined by the tuple
-    (or single integer) cols as a tuple of float arrays 
+    (or single integer) cols as a tuple of float arrays
     (or a single float array)"""
     if isinstance(cols, str):
         cols = int(cols)
@@ -139,17 +139,17 @@ def get_data(file,cols=0,nrows='all'):
     else:
         data=list(data)
         for j in range(nvar): data[j]=array(list(map(float,data[j])))
-        return tuple(data) 
+        return tuple(data)
 
 def write(file,variables,header='',format='',append='no'):
-    """ Writes tuple of list/arrays to a file 
+    """ Writes tuple of list/arrays to a file
         Usage:
 	  put_data(file,(x,y,z),header,format)
-	where header is any string  
+	where header is any string
         and format is a string of the type:
-           '%f %f %i ' 
+           '%f %f %i '
 	The default format is all strings
-    """    
+    """
     if type(variables)!=type((2,)):
         raise 'Need a tuple of variables'
     if format=='': format='%s  '*len(variables)
@@ -163,7 +163,7 @@ def write(file,variables,header='',format='',append='no'):
         cosas=[]
         for j in range(len(variables)):
             cosas.append(variables[j][i])
-        line=format % tuple(cosas)             
+        line=format % tuple(cosas)
         f.write(line+'\n')
     f.close()
 
@@ -204,10 +204,10 @@ def get_2Darray_hdf5(file,cols='Null',nrows='Null',verbose=False):
     outarray = smalldf.values #if we switch to pandas 0.24 or higher
     #this could be replaced with smalldf.to_numpy()
     return outarray
-    
+
 
 def get_2Darray(file,cols='all',nrows='all',verbose='no'):
-    """Read the data on the defined columns of a file 
+    """Read the data on the defined columns of a file
     to an 2 array
     Usage:
     x=get_2Darray(file)
@@ -238,19 +238,19 @@ def get_2Darray(file,cols='all',nrows='all',verbose='no'):
     return squeeze(x)
 
 def put_2Darray(file,array,header='',format='',append='no'):
-    """ Writes a 2D array to a file, where the first 
+    """ Writes a 2D array to a file, where the first
     index changes along the lines and the second along
     the columns
     Usage: put_2Darray(file,a,header,format)
-	where header is any string  
+	where header is any string
         and format is a string of the type:
-           '%f %f %i ' 
+           '%f %f %i '
     """
     lista=[]
     for i in range(array.shape[1]):lista.append(array[:,i])
     lista=tuple(lista)
     put_data(file,lista,header,format,append)
-       
+
 
 class watch:
     def set(self):
@@ -269,10 +269,10 @@ class watch:
             print()
 
 def params_file(file):
-    """ 
-	Read a input file containing the name of several parameters 
+    """
+	Read a input file containing the name of several parameters
         and their values with the following format:
-        
+
 	KEY1   value1,value2,value3   # comment
         KEY2   value
 
@@ -282,10 +282,10 @@ def params_file(file):
     """
     dict={}
     for line in open(file,'r').readlines():
-        if line[0]==' ' or line[0]=='#': continue 
+        if line[0]==' ' or line[0]=='#': continue
         halves=line.split('#')
 	#replace commas in case they're present
-        halves[0]=halves[0].replace(',',' ') 	
+        halves[0]=halves[0].replace(',',' ')
         pieces=halves[0].split()
         if len(pieces)==0: continue
         key=pieces[0]
@@ -294,20 +294,20 @@ def params_file(file):
         if len(pieces)<2:
             mensaje='No value(s) for parameter  '+key
             raise mensaje
-        dict[key]=tuple(pieces[1:]) 
+        dict[key]=tuple(pieces[1:])
         if len(dict[key])==1: dict[key]=dict[key][0]
     return dict
 
 def params_commandline(lista):
-    """ Read an input list (e.g. command line) 
-	containing the name of several parameters 
+    """ Read an input list (e.g. command line)
+	containing the name of several parameters
         and their values with the following format:
-        
-        ['-KEY1','value1,value2,value3','-KEY2','value',etc.] 
-          
-         Returns a dictionary containing 
+
+        ['-KEY1','value1,value2,value3','-KEY2','value',etc.]
+
+         Returns a dictionary containing
         dict['KEY1']=(value1,value2,value3)
-        dict['KEY2']=value 
+        dict['KEY2']=value
 	etc.
     """
     dict = {}
@@ -362,8 +362,8 @@ class params:
 
     def fromfile(self,file):
         """Update the parameter dictionary with a file"""
-        self.d.update(params_file(file)) 
-    
+        self.d.update(params_file(file))
+
     def fromcommandline(self,command_line):
         """Update the parameter dictionary with command line options (sys.argv[i:])"""
         self.d.update(params_commandline(command_line))
@@ -373,7 +373,7 @@ class params:
         for key in list(dict.keys()):
             print("Hey, I'm updating something")
             self.d[key]=dict[key]
-                   
+
     def check(self):
         """Interactively check the values of the parameters"""
         view_keys(self.d)
@@ -391,7 +391,7 @@ Do you want to include it?(y/n)\n")
                 value=input('New value(s) of '+key+'?= ')
                 self.d[key]=tuple(split(replace(value,',',' ')))
             view_keys(self.d)
-            paso1=input('Anything else?(y/n)\n')            
+            paso1=input('Anything else?(y/n)\n')
 
     def write(self,file):
         claves=list(self.d.keys())
@@ -417,15 +417,15 @@ def biggles_colors():
 #Some miscellaneous numerical functions
 
 def ascend(x):
-    """True if vector x is monotonically ascendent, false otherwise 
-       Recommended usage: 
-       if not ascend(x): sort(x) 
+    """True if vector x is monotonically ascendent, false otherwise
+       Recommended usage:
+       if not ascend(x): sort(x)
     """
     return alltrue(greater_equal(x[1:],x[0:-1]))
 
 
 #def match_resol(xg,yg,xf,method="linear"):
-#    """ 
+#    """
 #    Interpolates and/or extrapolate yg, defined on xg, onto the xf coordinate set.
 #    Options are 'lineal' or 'spline' (uses spline.py from Johan Hibscham)
 #    Usage:
@@ -444,11 +444,11 @@ def ascend(x):
 #	low_slope=(yg[1]-yg[0])/(xg[1]-xg[0])
 #	high_slope=(yg[-1]-yg[-2])/(xg[-1]-xg[-2])
 #	sp=Spline(xg,yg,low_slope,high_slope)
-#	return sp(xf)	
+#	return sp(xf)
 
 
 def match_resol(xg,yg,xf,method="linear"):
-    """ 
+    """
     Interpolates and/or extrapolate yg, defined on xg, onto the xf coordinate set.
     Options are 'linear' or 'spline' (uses spline.py from Johan Hibscham)
     Usage:
@@ -468,8 +468,8 @@ def match_resol(xg,yg,xf,method="linear"):
         low_slope=(yg[1]-yg[0])/(xg[1]-xg[0])
         high_slope=(yg[-1]-yg[-2])/(xg[-1]-xg[-2])
         sp=Spline(xg,yg,low_slope,high_slope)
-        return sp(xf)	
-	
+        return sp(xf)
+
 
 
 def overlap(x,y):
@@ -482,11 +482,11 @@ def overlap(x,y):
 def match_objects(coords1,coords2,tail1=(),tail2=(),accuracy=1.):
     """
     where coords1 and coords2 are tuples containing 1-D arrays,
-    and tail1 and tail2 are tuples containing sequences of 
+    and tail1 and tail2 are tuples containing sequences of
     arbitrary types
     Usage:
     results=match_objects((x1,y1),(x2,y2),(a1,b1,c1),(d2,e2),accuracy=.5)
-    It returns the sequence x1,y1,a1,b1,c1,d2,e2 for those objects 
+    It returns the sequence x1,y1,a1,b1,c1,d2,e2 for those objects
     which have dist(x1,y1-x2,y2)< accuracy
     """
     acc2=accuracy**2
@@ -496,10 +496,10 @@ def match_objects(coords1,coords2,tail1=(),tail2=(),accuracy=1.):
     a1=array(coords1)
     a2=array(coords2)
     nt1=len(tail1)
-    for i in range(nt1): 
+    for i in range(nt1):
         if len(tail1[i])!= np1: raise 'Not the same lenght as coordinates 1'
     nt2=len(tail2)
-    for i in range(nt2): 
+    for i in range(nt2):
         if len(tail2[i])!= np2: raise 'Not the same lenght as coordinates 2'
     match=zeros(np1, int)-1
     for j in range(np1):
@@ -509,7 +509,7 @@ def match_objects(coords1,coords2,tail1=(),tail2=(),accuracy=1.):
         i_min=argmin(dist)
         if dist[i_min]<acc2:match[j]=i_min
     good=greater_equal(match,0)
-    n1=compress(good,list(range(np1)))    
+    n1=compress(good,list(range(np1)))
     match=compress(good,match)
     a1=compress(good,a1)
     salida=list(a1)
@@ -533,13 +533,13 @@ def match_objects(coords1,coords2,tail1=(),tail2=(),accuracy=1.):
 def match_min(coords1,coords2,tail1=(),tail2=()):
     """
     where coords1 and coords2 are tuples containing 1-D arrays,
-    and tail1 and tail2 are tuples containing sequences of 
+    and tail1 and tail2 are tuples containing sequences of
     arbitrary types
 
     Usage:
 
     results=match_min((x1,y1),(x2,y2),(a1,b1,c1),(d2,e2))
-    It returns the sequence x1,y1,a1,b1,c1,d2,e2, dist_min 
+    It returns the sequence x1,y1,a1,b1,c1,d2,e2, dist_min
     where dist_min is the minimal value of dist(x1,y1-x2,y2)
     The match looks for the objects with minimal distance
     """
@@ -549,10 +549,10 @@ def match_min(coords1,coords2,tail1=(),tail2=()):
     a1=array(coords1)
     a2=array(coords2)
     nt1=len(tail1)
-    for i in range(nt1): 
+    for i in range(nt1):
         if len(tail1[i])!= np1: raise 'Not the same lenght as coordinates 1'
     nt2=len(tail2)
-    for i in range(nt2): 
+    for i in range(nt2):
         if len(tail2[i])!= np2: raise 'Not the same lenght as coordinates 2'
     match=zeros(np1, int)-1
 
@@ -568,7 +568,7 @@ def match_min(coords1,coords2,tail1=(),tail2=()):
 
     salida=list(a1)
     for i in range(nt1):salida.append(tail1[i])
-    
+
     for i in range(nt2):
         if type(tail2[i][0])==type('si'):
             t=[]
@@ -584,13 +584,13 @@ def match_min(coords1,coords2,tail1=(),tail2=()):
 def match_min2(coords1,coords2,tail1=(),tail2=()):
     """
     where coords1 and coords2 are tuples containing 1-D arrays,
-    and tail1 and tail2 are tuples containing sequences of 
+    and tail1 and tail2 are tuples containing sequences of
     arbitrary types
 
     Usage:
 
     results=match_min((x1,y1),(x2,y2),(a1,b1,c1),(d2,e2))
-    It returns the sequence x1,y1,x2,y2,a1,b1,c1,d2,e2, dist_min 
+    It returns the sequence x1,y1,x2,y2,a1,b1,c1,d2,e2, dist_min
     where dist_min is the minimal value of dist(x1,y1-x2,y2)
     The match looks for the objects with minimal distance
     """
@@ -600,10 +600,10 @@ def match_min2(coords1,coords2,tail1=(),tail2=()):
     a1=array(coords1)
     a2=array(coords2)
     nt1=len(tail1)
-    for i in range(nt1): 
+    for i in range(nt1):
         if len(tail1[i])!= np1: raise 'Not the same lenght as coordinates 1'
     nt2=len(tail2)
-    for i in range(nt2): 
+    for i in range(nt2):
         if len(tail2[i])!= np2: raise 'Not the same lenght as coordinates 2'
     match=zeros(np1, int)-1
     dist_min=zeros(np1)*1.
@@ -617,13 +617,13 @@ def match_min2(coords1,coords2,tail1=(),tail2=()):
         dist_min[j]=dist[i_min]
         x2[j],y2[j]=a2[0,i_min],a2[1,i_min]
         match[j]=i_min
-        
+
     salida=list(a1)
     salida.append(x2)
     salida.append(y2)
 
     for i in range(nt1):salida.append(tail1[i])
-    
+
     for i in range(nt2):
         if type(tail2[i][0])==type('si'):
             t=[]
@@ -654,7 +654,7 @@ def loc2d(a,extremum='max'):
     i1=i/forma[1]
     i2=i%forma[1]
     return i1,i2
-    
+
 def hist(a,bins):
     """
     Histogram of 'a' defined on the bin grid 'bins'
@@ -672,12 +672,12 @@ def hist(a,bins):
 #       Usage: h=hist2D(p,xp,yp)
 #       Points larger than xbins[-1],ybins[-1] are asigned to
 #       the 'last' bin
-#    """   
+#    """
 #    nx=len(xbins)
 #    ny=len(ybins)
 #    #We use searchsorted differenty from the 1-D case
 #    hx=searchsorted(xbins,a)
-#    hy=searchsorted(ybins,a)        
+#    hy=searchsorted(ybins,a)
 #    h=zeros((nx,ny))
 #    for i in range(len(hx)):
 #        for j in range(len(hy)):
@@ -690,11 +690,11 @@ def hist(a,bins):
 #                    h[i,j]=h[i,j]+1
 #                    break
 #                else:
-                                        
+
 
 def bin_stats(x,y,xbins,stat='average'):
-    """Given the variable y=f(x), and 
-    the bins limits xbins, return the 
+    """Given the variable y=f(x), and
+    the bins limits xbins, return the
     corresponding statistics, e.g. <y(xbins)>
     Options are rms, median y average
     """
@@ -727,34 +727,34 @@ def p2p(x):
 
 def autobin_stats(x,y,n_bins=8,stat='average',n_points=None):
     """
-    Given the variable y=f(x), form n_bins, distributing the 
-    points equally among them. Return the average x position 
+    Given the variable y=f(x), form n_bins, distributing the
+    points equally among them. Return the average x position
     of the points in each bin, and the corresponding statistic stat(y).
-    n_points supersedes the value of n_bins and makes the bins 
+    n_points supersedes the value of n_bins and makes the bins
     have exactly n_points each
     Usage:
       xb,yb=autobin_stats(x,y,n_bins=8,'median')
       xb,yb=autobin_stats(x,y,n_points=5)
     """
-    
+
     if not ascend(x):
         ix=argsort(x)
         x=take(x,ix)
         y=take(y,ix)
     n=len(x)
-    if n_points==None: 
+    if n_points==None:
         #This throws out some points
         n_points=n/n_bins
-    else: 
+    else:
         n_bins=n/n_points
         #if there are more that 2 points in the last bin, add another bin
         if n%n_points>2: n_bins=n_bins+1
-    
+
     if n_points<=1:
         print('Only 1 or less points per bin, output will be sorted input vector with rms==y')
         return x,y
     xb,yb=[],[]
-    
+
     #print 'stat', stat
     if   stat=='average' or stat=='mean':          func=mean
     elif stat=='median':                           func=median
@@ -765,7 +765,7 @@ def autobin_stats(x,y,n_bins=8,stat='average',n_points=None):
     elif stat=='p2p':                              func=p2p  # --DC
     elif stat=='min':                              func=min  # --DC
     elif stat=='max':                              func=max  # --DC
-    
+
     for i in range(n_bins):
         xb.append(mean(x[i*n_points:(i+1)*n_points]))
         if func==std and n_points==2:
@@ -774,7 +774,7 @@ def autobin_stats(x,y,n_bins=8,stat='average',n_points=None):
             yb.append(abs(y[i*n_points]-y[i*n_points+1])/2.)
         else:
             yb.append(func(y[i*n_points:(i+1)*n_points]))
-        if i>2 and xb[-1]==xb[-2]: 
+        if i>2 and xb[-1]==xb[-2]:
             yb[-2]=(yb[-2]+yb[-1])/2.
             xb=xb[:-1]
             yb=yb[:-1]
@@ -788,7 +788,7 @@ def purge_outliers(x,n_sigma=3.,n=5):
         #rms=std_log(x)
         rms=std(x)
         x=compress(less_equal(abs(x-med),n_sigma*rms),x)
-    return x        
+    return x
 
 class stat_robust:
     #Generates robust statistics using a sigma clipping
@@ -833,7 +833,7 @@ class stat_robust:
         self.n_remaining=len(self.remaining)
         self.n_outliers=len(self.outliers)
         self.fraction=1.-(float(self.n_remaining)/float(len(self.x)))
-    
+
 def std_robust(x,n_sigma=3.,n=5):
     x=purge_outliers(x,n_sigma,n)
     return std(x-mean(x))
@@ -887,8 +887,8 @@ def out_thr(x,thr=0.2,max_it=10):
 
 
 #def bin_aver(x,y,xbins):
-#    """Given the variable y=f(x), and 
-#    the bins limits xbins, return the 
+#    """Given the variable y=f(x), and
+#    the bins limits xbins, return the
 #    average <y(xbins)>"""
 #    a=argsort(x)
 #    nbins=len(xbins)
@@ -915,7 +915,7 @@ def multicompress(condition,variables):
     return tuple(lista)
 
 def multisort(first,followers):
-    #sorts the vector first and matches the ordering 
+    #sorts the vector first and matches the ordering
     # of followers to it
     #Usage:
     # new_followers=multi_sort(first,followers)
@@ -928,11 +928,11 @@ def multisort(first,followers):
         for i in range(nvectors):
             lista.append(take(followers[i],order))
         return tuple(lista)
-	
+
 def erfc(x):
     """
     Returns the complementary error function erfc(x)
-    erfc(x)=1-erf(x)=2/sqrt(pi)*\int_x^\inf e^-t^2 dt   
+    erfc(x)=1-erf(x)=2/sqrt(pi)*\int_x^\inf e^-t^2 dt
     """
     try: x.shape
     except: x=array([x])
@@ -985,7 +985,7 @@ gauss_int=gauss_int_erf
 
 def inv_gauss_int(p):
     #Brute force approach. Limited accuracy for >3sigma
-    #find something better 
+    #find something better
     #DO NOT USE IN LOOPS (very slow)
     """
     Calculates the x sigma value corresponding to p
@@ -1117,7 +1117,7 @@ class NumberCounts:
             print('self.xm[0],self.xm[-1]',self.xm[0],self.xm[-1])
         else:
             self.xm=arange(mmin,mmax+dm,dm)
-            
+
         self.dnc=hist(m,self.xm)
         self.xm=self.xm+dm*0.5
         self.dnc=self.dnc/area/dm
@@ -1136,14 +1136,14 @@ class NumberCounts:
             print('We set those values to 1e-1')
             dnc=where(equal(self.dnc,0.),1e-2,self.dnc)
             self.ldnc=log10(dnc)
-                        
+
         try:
             self.lcnc=log10(self.cnc)
         except:
             print('Could not calculate log of cumulative numbers counts')
-            
+
 class lsq:
-    #Defines a least squares minimum estimator given two 
+    #Defines a least squares minimum estimator given two
     #vectors x and y
     def __init__(self,x,y,dy=0.):
         try: dy.shape
@@ -1171,7 +1171,7 @@ def rotation(x,y,angle):
 
 
 
-#Tests 
+#Tests
 
 def Testing(test):
     print('Testing ',test,'...')
@@ -1180,7 +1180,7 @@ def test():
     """ Tests the functions defined in this module"""
 
     Testing("I/O FUNCTIONS")
-    
+
     test="put_str and get_str"
     x=arange(100.)
     y=list(map(str,sin(x)))
@@ -1215,7 +1215,7 @@ def test():
     nlines=get_header("test.head")
     lines=string.join(['#'+x+'\n' for x in lines],'')
 
-    if lines!=nlines: 
+    if lines!=nlines:
         print(repr(lines))
         print(repr(nlines))
         raise test
@@ -1229,7 +1229,7 @@ def test():
     comp=not_equal(yn,y)
     for i in range(yn.shape[1]):
         if sometrue(comp[:,i]): raise test
-    
+
     #Testing("MISC NUMERICAL FUNCTIONS")
 
     test='ascend'
@@ -1256,7 +1256,7 @@ def test():
     yb=bin_aver(x,y,xb)+.45
     yr=arange(10)+1.
     if sometrue(greater_equal(yb-yr,1e-10)): raise test
-    
+
     test='dist'
     Testing(test)
     a=arange(0,2.*pi,pi/6.)
@@ -1349,5 +1349,3 @@ def test():
 
 if __name__ == '__main__':test()
 else: pass
-
-
